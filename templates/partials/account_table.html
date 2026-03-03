@@ -1,0 +1,35 @@
+<p><strong>Status:</strong> {{ current.state }}</p>
+<p><strong>Last Updated:</strong> {{ current.timestamp }}</p>
+
+<button class="btn btn-outline-primary" onclick="toggleHistory()">Show History</button>
+
+<div id="history" style="display:none;" class="mt-3">
+    <table class="table table-bordered">
+        <tr>
+            <th>ID</th>
+            <th>Account</th>
+            <th>State</th>
+            <th>Timestamp</th>
+            <th>Extra</th>
+            <th>Node</th>
+        </tr>
+
+        {% for row in history %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.account }}</td>
+            <td>{{ row.state }}</td>
+            <td>{{ row.timestamp }}</td>
+            <td>{{ row.extra1 }}</td>
+            <td>{{ row.node }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<script>
+function toggleHistory() {
+    const box = document.getElementById("history");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+}
+</script>

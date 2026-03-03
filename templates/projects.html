@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Projects</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Project</th>
+        <th>PI</th>
+        <th>Members</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for name, proj in projects.items() %}
+    <tr>
+        <td>{{ name }}</td>
+        <td>{{ proj.pi }}</td>
+        <td>{{ proj.members|length }}</td>
+        <td>
+            <a class="btn btn-primary btn-sm" href="/projects/{{ name }}">View</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

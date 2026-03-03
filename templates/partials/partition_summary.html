@@ -1,0 +1,17 @@
+<table class="table table-bordered">
+    <tr>
+        <th>Partition</th>
+        <th>Running</th>
+        <th>Pending</th>
+        <th>Total</th>
+    </tr>
+
+    {% for part, data in partition_summary.items() %}
+    <tr>
+        <td>{{ part }}</td>
+        <td>{{ data.running }}</td>
+        <td>{{ data.pending }}</td>
+        <td>{{ data.total }}</td>
+    </tr>
+    {% endfor %}
+</table>

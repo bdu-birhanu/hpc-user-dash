@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Project: {{ name }}</h2>
+<p><strong>PI:</strong> {{ project.pi }}</p>
+
+<h3>Members</h3>
+
+<ul class="list-group mb-3">
+    {% for m in project.members %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ m }}
+        <form method="post" class="m-0">
+            <input type="hidden" name="user" value="{{ m }}">
+            <input type="hidden" name="action" value="remove">
+            <button class="btn btn-danger btn-sm">Remove</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+
+<h3>Add Member</h3>
+<form method="post" class="row g-3">
+    <div class="col-auto">
+        <input type="text" name="user" class="form-control" placeholder="username" required>
+    </div>
+    <div class="col-auto">
+        <input type="hidden" name="action" value="add">
+        <button class="btn btn-success">Add</button>
+    </div>
+</form>
+
+{% endblock %}

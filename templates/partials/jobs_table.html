@@ -1,0 +1,19 @@
+<table class="table table-striped">
+    <tr>
+        <th>Job ID</th>
+        <th>Partition</th>
+        <th>State</th>
+        <th>Runtime</th>
+        <th>Submit Time</th>
+    </tr>
+
+    {% for job in jobs %}
+    <tr>
+        <td>{{ job.id }}</td>
+        <td>{{ job.partition }}</td>
+        <td>{{ job.state }}</td>
+        <td>{{ job.runtime }}</td>
+        <td>{{ job.submit }}</td>
+    </tr>
+    {% endfor %}
+</table>
