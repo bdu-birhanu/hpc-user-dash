@@ -1,33 +1,73 @@
-{% extends "base.html" %}
+{% extends "index.html" %}
 {% block content %}
 
-<h2>Project: {{ name }}</h2>
-<p><strong>PI:</strong> {{ project.pi }}</p>
+<div class="container mt-4">
 
-<h3>Members</h3>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Lab Project: <span class="text-primary">{{ name }}</span></h2>
+        <a href="/projects" class="btn btn-outline-secondary btn-sm"> Back to All Projects</a>
+    </div>
 
-<ul class="list-group mb-3">
-    {% for m in project.members %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        {{ m }}
-        <form method="post" class="m-0">
-            <input type="hidden" name="user" value="{{ m }}">
-            <input type="hidden" name="action" value="remove">
-            <button class="btn btn-danger btn-sm">Remove</button>
+    <!-- Project Info Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+    
+            <p><strong>Directory:</strong> {{ name }}</p>
+            <p><strong>Group:</strong> {{ project.groupname }}</p>
+            <p><strong>PI/Owner:</strong> {{ project.pi }}</p>
+        </div>
+        
+        <!-- Add Member Form -->
+        <form method="post" class="row g-3 mb-3">
+            <h8 class="card-title mb-0"> <strong> Enter BlazerID or XIAS account to add new Members </strong> </h8>
+            <div class="col-md-4">
+                <input type="text" name="user" class="form-control" placeholder="Enter BazerID or XIAS" required>
+                
+            </div>
+            <div class="col-auto">
+                
+                <input type="hidden" name="action" value="add">
+                <button class="btn btn-success">Add Member</button>
+            </div>
         </form>
-    </li>
-    {% endfor %}
-</ul>
+        
+        {% if message %}
+        <div class="alert alert-info">
+            {{ message }}
+        </div>
+        {% endif %}
 
-<h3>Add Member</h3>
-<form method="post" class="row g-3">
-    <div class="col-auto">
-        <input type="text" name="user" class="form-control" placeholder="username" required>
     </div>
-    <div class="col-auto">
-        <input type="hidden" name="action" value="add">
-        <button class="btn btn-success">Add</button>
+
+    <!-- Members Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0"> <strong> Current Members </strong> </h5>
+                <span class="badge bg-primary">{{ project.members|length }} total</span>
+            </div>
+
+
+            <!-- Members List -->
+            <ul class="list-group">
+                {% for m in project.members %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ m }}</span>
+
+                    <form method="post" class="m-0">
+                        <input type="hidden" name="user" value="{{ m }}">
+                        <input type="hidden" name="action" value="remove">
+                        <button class="btn btn-danger btn-sm">Remove</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+
+        </div>
     </div>
-</form>
+
+</div>
 
 {% endblock %}
