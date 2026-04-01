@@ -1,26 +1,110 @@
-{% extends "base.html" %}
+{% extends "index.html" %}
 {% block content %}
 
-<h2>Projects</h2>
+<h2>Lab Projects ({{ projects|length }} Total projects)</h2>
 
-<table class="table table-bordered">
-    <tr>
-        <th>Project</th>
-        <th>PI</th>
-        <th>Members</th>
-        <th>Actions</th>
-    </tr>
+<!-- Filter box to search projects by name -->
+<div class="d-flex align-items-center mb-3" style="gap: 10px;">
+    <label for="projectFilter" class="fw-bold m-0">Search Projects by Name </label>
 
-    {% for name, proj in projects.items() %}
-    <tr>
-        <td>{{ name }}</td>
-        <td>{{ proj.pi }}</td>
-        <td>{{ proj.members|length }}</td>
-        <td>
-            <a class="btn btn-primary btn-sm" href="/projects/{{ name }}">View</a>
-        </td>
-    </tr>
+    <input type="text"
+           id="projectFilter"
+           class="form-control"
+           style="max-width: 300px;"
+           placeholder=" enter lab name">
+</div>
+
+<a href="/projects.json" class="btn btn-secondary mb-3">
+    Download as JSON
+</a>
+
+
+<table class="table table-bordered align-middle">
+    <thead>
+        <tr>
+            <th>Directory</th>
+            <th>Group</th>
+            <th>PI/Owner</th>
+            <th>Storage (demo!)</th>   <!-- new col for storage demo -->
+            <th>Members</th>
+            <th>Manage</th>
+        </tr>
+    </thead>
+
+    <tbody id="projectTable">
+    {% for dirname, p in projects.items() %}
+        <tr class="project-row">
+            <td class="project-name">{{ dirname }}</td>
+            <td>{{ p.groupname }}</td>
+            <td>{{ p.pi }}</td>
+            
+            <!-- Storage usage with demo data -->
+            <td style="width: 200px;">
+                {% set demo_usage = (loop.index * 13) % 100 %} 
+
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar 
+                        {% if demo_usage < 60 %}bg-success
+                        {% elif demo_usage < 85 %}bg-warning
+                        {% else %}bg-danger{% endif %}"
+                        role="progressbar"
+                        style="width: {{ demo_usage }}%;">
+                        {{ demo_usage }}%
+                    </div>
+                </div>
+            </td>
+
+            <td>
+                <button class="btn btn-sm btn-outline-secondary"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#members-{{ loop.index }}"
+                        onclick="
+                            if (this.classList.contains('open')) {
+                                this.classList.remove('open');
+                                this.textContent = '+ ({{ p.members|length }})';
+                            } else {
+                                this.classList.add('open');
+                                this.textContent = '- ({{ p.members|length }})';
+                            }
+                        ">
+                    + ({{ p.members|length }})
+                </button>
+
+                <div id="members-{{ loop.index }}" class="collapse mt-2">
+                    {% if p.members %}
+                        {{ p.members | join(", ") }}
+                    {% else %}
+                        <em>No members</em>
+                    {% endif %}
+                </div>
+            </td>
+
+
+            <td>
+                <a href="/projects/{{ dirname }}" class="btn btn-sm btn-outline-primary">
+                    Manage
+                </a>
+            </td>
+        </tr>
     {% endfor %}
+    </tbody>
 </table>
 
+<!-- Filtering script -->
+<script>
+document.getElementById("projectFilter").addEventListener("input", function () {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll("#projectTable .project-row");
+
+    rows.forEach(row => {
+        const name = row.querySelector(".project-name").textContent.toLowerCase();
+        row.style.display = name.startsWith(filter) ? "" : "none";
+    });
+});
+</script>
+
+
+
 {% endblock %}
+
+

@@ -1,1 +1,10 @@
-<p><strong>Type:</strong> {{ membership.membership }}</p>
+{% if membership == "USER_NOT_FOUND" %}
+    <p class="text-danger fw-bold">User not found on this system.</p>
+
+{% elif membership %}
+    <p class="text-muted mb-2"></p>
+    <p>{{ membership | join(", ") }}</p>
+
+{% else %}
+    <p class="text-muted">No project memberships found.</p>
+{% endif %}

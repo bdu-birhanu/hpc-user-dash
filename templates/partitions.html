@@ -1,41 +1,88 @@
-{% extends "base.html" %}
+{% extends "index.html" %}
 {% block content %}
 
-<h2>Cluster Partitions</h2>
-<p class="text-muted">Overview of partition usage and availability.</p>
+<h2>Partitions</h2>
+<p class="text-muted">Partition usage and availability</p>
 
-<table class="table table-bordered table-striped">
-    <tr>
-        <th>Partition</th>
-        <th>Nodes</th>
-        <th>CPUs</th>
-        <th>GPUs</th>
-        <th>Running Jobs</th>
-        <th>Pending Jobs</th>
-        <th>Utilization</th>
-        <th>Status</th>
-    </tr>
+<!-- Auto-refresh every 30 seconds, 30000 milliseconds equals 30 seconds -->
+<script>
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
 
-    {% for p in partitions %}
-    <tr>
-        <td>{{ p.name }}</td>
-        <td>{{ p.nodes }}</td>
-        <td>{{ p.cpus }}</td>
-        <td>{{ p.gpus }}</td>
-        <td>{{ p.running }}</td>
-        <td>{{ p.pending }}</td>
-        <td>{{ p.utilization }}</td>
-        <td>
-            {% if p.state == "UP" %}
-                <span class="badge bg-success">UP</span>
-            {% elif p.state == "DRAIN" %}
-                <span class="badge bg-warning text-dark">DRAIN</span>
-            {% else %}
-                <span class="badge bg-danger">DOWN</span>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Partition</th>
+            <th>ava.Nodes</th>
+            <th>ava.CPUs</th>
+            <th>GPUs_per_node</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for part in partitions %}
+        <tr>
+            <!-- Expand button -->
+            <td>
+                <button class="btn btn-sm btn-outline-secondary"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#p-{{ loop.index }}"
+                        onclick="
+                            if (this.classList.contains('open')) {
+                                this.classList.remove('open');
+                                this.textContent = '+';
+                            } else {
+                                this.classList.add('open');
+                                this.textContent = '-';
+                            }
+                        ">
+                    +
+                </button>
+            </td>
+
+            <td>{{ part.name }}</td>
+            <td>{{ part.nodes }}</td>
+            <td>{{ part.cpus }}</td>
+            <td>{{ part.gpus }}</td>
+
+        </tr>
+
+        <!-- Expanded node table -->
+        <tr class="collapse" id="p-{{ loop.index }}">
+            <td colspan="8">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th>Node</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for node in part.nodes_detail %}
+                        <tr>
+                            <td>
+                                <span class="badge 
+                                    {% if node.state == 'idle' %} bg-success
+                                    {% elif node.state == 'mix' %} bg-warning
+                                    {% elif node.state in ['alloc', 'comp'] %} bg-primary
+                                    {% else %} bg-danger
+                                    {% endif %}">
+                                    {{ node.state }}
+                                </span>
+                            </td>
+                            <td>{{ node.node }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+
+        {% endfor %}
+    </tbody>
 </table>
 
 {% endblock %}

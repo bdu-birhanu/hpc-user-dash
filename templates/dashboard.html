@@ -1,83 +1,93 @@
-{% extends "base.html" %}
+{% extends "index.html" %}
 {% block content %}
 
-<h2>User Lookup</h2>
+<h2>User Information</h2>
 
 <form method="post" class="row g-3 mb-4">
     <div class="col-auto">
-        <input type="text" name="user_id" class="form-control" placeholder="Enter username" required>
+        <input type="text" name="user_id" class="form-control" placeholder="Enter ID" required>
     </div>
     <div class="col-auto">
-        <button class="btn btn-primary">Search</button>
+        <button class="btn" style="background:#0f766e; color:white;">Check</button>
     </div>
 </form>
 
-{% if user_id %}
-<h3>Results for: {{ user_id }}</h3>
-<hr>
+{% if user_not_found %}
+    <p class="text-danger fw-bold">User {{ user_id }} not found.</p>
 
-<!-- Job limit dropdown -->
-<form method="post" class="mb-3">
-    <input type="hidden" name="user_id" value="{{ user_id }}">
+{% else %}
 
-    <label><strong>Show jobs:</strong></label>
-    <select name="job_limit" onchange="this.form.submit()">
-        <option value="3"  {% if job_limit == 3 %}selected{% endif %}>3</option>
-        <option value="5"  {% if job_limit == 5 %}selected{% endif %}>5</option>
-        <option value="10" {% if job_limit == 10 %}selected{% endif %}>10</option>
-        <option value="15" {% if job_limit == 15 %}selected{% endif %}>15</option>
-        <option value="25" {% if job_limit == 25 %}selected{% endif %}>25</option>
-        <option value="50" {% if job_limit == 50 %}selected{% endif %}>50</option>
-        <option value="125" {% if job_limit == 125 %}selected{% endif %}>125</option>
-    </select>
+    {% if user_id %}
+    <h3>Info about: {{ user_id }}</h3>
+    <hr>
 
-    <noscript><button class="btn btn-primary btn-sm">Apply</button></noscript>
-</form>
-
-
-{% if current %}
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">Account State</div>
-    <div class="card-body">
-        {% include "partials/account_table.html" %}
+    {% if current %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Account State</div>
+        <div class="card-body">
+            {% include "partials/account_table.html" %}
+        </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
-{% if membership %}
-<div class="card mb-4">
-    <div class="card-header bg-success text-white">Membership</div>
-    <div class="card-body">
-        {% include "partials/membership_card.html" %}
+    {% if membership %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">Membership</div>
+        <div class="card-body">
+            {% include "partials/membership_card.html" %}
+        </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
-{% if storage %}
-<div class="card mb-4">
-    <div class="card-header bg-warning text-dark">Storage Usage</div>
-    <div class="card-body">
-        {% include "partials/storage_card.html" %}
+    
+    {% if jobs %}
+    <div class="card mb-4">
+    
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <span>Recent Jobs ({{ job_limit }})</span>
+    
+            <!-- Job limit dropdown INSIDE the card -->
+            <form method="post" class="m-0 p-0">
+                <input type="hidden" name="user_id" value="{{ user_id }}">
+    
+                <select name="job_limit" class="form-select form-select-sm d-inline-block w-auto"
+                        onchange="this.form.submit()">
+                    <option value="2"  {% if job_limit == 2 %}selected{% endif %}>2</option>
+                    <option value="5"  {% if job_limit == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if job_limit == 10 %}selected{% endif %}>10</option>
+                    <option value="15" {% if job_limit == 15 %}selected{% endif %}>15</option>
+                    <option value="25" {% if job_limit == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if job_limit == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if job_limit == 100 %}selected{% endif %}>100</option>
+                </select>
+            </form>
+        </div>
+    
+        <div class="card-body">
+            {% include "partials/jobs_table.html" %}
+        </div>
+    
     </div>
-</div>
-{% endif %}
 
-{% if jobs %}
-<div class="card mb-4">
-    <div class="card-header bg-info text-white">Recent Jobs ({{ job_limit }})</div>
-    <div class="card-body">
-        {% include "partials/jobs_table.html" %}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">Job Summary by Partition</div>
+        <div class="card-body">
+            {% include "partials/partition_summary.html" %}
+        </div>
     </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header bg-secondary text-white">Job Summary by Partition</div>
-    <div class="card-body">
-        {% include "partials/partition_summary.html" %}
+    {% endif %}
+    
+    {% if storage %}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-dark">Storage Usage (demo!)</div>
+        <div class="card-body">
+            {% include "partials/storage_card.html" %}
+        </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
+    
+    {% endif %}  <!-- closes user_id block -->
 
-{% endif %}  <!-- closes the main user_id block -->
+{% endif %}  <!-- closes user_not_found block -->
 
 {% endblock %}

@@ -1,2 +1,17 @@
-<p><strong>Home Used:</strong> {{ storage.home_used }} / {{ storage.home_quota }}</p>
-<p><strong>Scratch Used:</strong> {{ storage.scratch_used }} / {{ storage.scratch_quota }}</p>
+<!-- HOME STORAGE -->
+<p><strong>Home:</strong> {{ storage.home_used }} / {{ storage.home_quota }}</p>
+<div class="progress mb-2" style="height: 20px;">
+    <div class="progress-bar bg-primary" role="progressbar"
+         style="width: {{ storage.home_percent }}%;">
+        {{ storage.home_percent }}%
+    </div>
+</div>
+
+<!-- SCRATCH STORAGE -->
+<p><strong>Scratch:</strong> {{ storage.scratch_used }} / {{ storage.scratch_quota }}</p>
+<div class="progress" style="height: 20px;">
+    <div class="progress-bar bg-warning text-dark" role="progressbar"
+         style="width: {{ storage.scratch_percent }}%;">
+        {{ storage.scratch_percent }}%
+    </div>
+</div>

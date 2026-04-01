@@ -1,17 +1,30 @@
-<table class="table table-bordered">
-    <tr>
-        <th>Partition</th>
-        <th>Running</th>
-        <th>Pending</th>
-        <th>Total</th>
-    </tr>
+<h4>Job Summary by Partition</h4>
 
-    {% for part, data in partition_summary.items() %}
-    <tr>
-        <td>{{ part }}</td>
-        <td>{{ data.running }}</td>
-        <td>{{ data.pending }}</td>
-        <td>{{ data.total }}</td>
-    </tr>
-    {% endfor %}
+{% if partition_summary %}
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>Partition</th>
+            <th>Total</th>
+            <th>Running</th>
+            <th>Pending</th>
+            <th>Completed</th>
+            <th>Failed</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for part, data in partition_summary.items() %}
+        <tr>
+            <td>{{ part }}</td>
+            <td>{{ data.total }}</td>
+            <td>{{ data.running }}</td>
+            <td>{{ data.pending }}</td>
+            <td>{{ data.completed }}</td>
+            <td>{{ data.failed }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+{% endif %}
+

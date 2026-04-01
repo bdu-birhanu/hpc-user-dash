@@ -1,19 +1,87 @@
-<table class="table table-striped">
-    <tr>
-        <th>Job ID</th>
-        <th>Partition</th>
-        <th>State</th>
-        <th>Runtime</th>
-        <th>Submit Time</th>
-    </tr>
+<h3>Jobs for {{ username }}</h3>
 
+<!-- Date filter -->
+<form method="get" class="row g-3 mb-4">
+    <input type="hidden" name="user_id" value="{{ user_id }}">
+
+    <div class="col-auto">
+        <label class="form-label fw-bold">Start Date</label>
+        <input type="date" name="start" value="{{ start_date }}" class="form-control">
+    </div>
+
+    <div class="col-auto">
+        <label class="form-label fw-bold">End Date</label>
+        <input type="date" name="end" value="{{ end_date }}" class="form-control">
+    </div>
+
+    <div class="col-auto d-flex align-items-end">
+        <button class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<table class="table table-bordered align-middle">
+    <thead>
+        <tr>
+            <th></th>
+            <th>JobID</th>
+            <th>State</th>
+        </tr>
+    </thead>
+
+    <tbody>
     {% for job in jobs %}
-    <tr>
-        <td>{{ job.id }}</td>
-        <td>{{ job.partition }}</td>
-        <td>{{ job.state }}</td>
-        <td>{{ job.runtime }}</td>
-        <td>{{ job.submit }}</td>
-    </tr>
+        <!-- main row -->
+        <tr>
+            <td style="width: 40px;">
+                <button class="btn btn-sm btn-outline-secondary"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#job-{{ loop.index }}"
+                        onclick="
+                            if (this.classList.contains('open')) {
+                                this.classList.remove('open');
+                                this.textContent = '+';
+                            } else {
+                                this.classList.add('open');
+                                this.textContent = '-';
+                            }
+                        ">
+                    +
+                </button>
+            </td>
+
+            <td>{{ job.jobid }}</td>
+
+            <td>
+                {% if job.state.startswith("RUN") %}
+                    <span class="badge bg-success">{{ job.state }}</span>
+                {% elif job.state.startswith("PEND") %}
+                    <span class="badge bg-warning text-dark">{{ job.state }}</span>
+                {% elif job.state.startswith("FAIL") %}
+                    <span class="badge bg-danger">{{ job.state }}</span>
+                {% elif job.state.startswith("COMP") %}
+                    <span class="badge bg-primary">{{ job.state }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ job.state }}</span>
+                {% endif %}
+            </td>
+        </tr>
+
+        <!-- Colappsed detailed rows -->
+        <tr class="collapse" id="job-{{ loop.index }}">
+            <td colspan="3">
+                <table class="table table-sm mb-0">
+                    <tr><th>Partition</th><td>{{ job.partition }}</td></tr>
+                    <tr><th>Elapsed</th><td>{{ job.elapsed }}</td></tr>
+                    <tr><th>Submit</th><td>{{ job.submit }}</td></tr>
+                    <!--<tr><th>NumNode</th><td>{{ job.node }}</td></tr>-->
+                    <tr><th>NodeList</th><td>{{ job.nodelist }}</td></tr>
+                    <tr><th>RAM</th><td>{{ job.memory }}</td></tr>
+                    <tr><th>CPUs</th><td>{{ job.cpus }}</td></tr>
+                    <tr><th>ExitCode</th><td>{{ job.exitcode }}</td></tr>
+                </table>
+            </td>
+        </tr>
+
     {% endfor %}
+    </tbody>
 </table>
