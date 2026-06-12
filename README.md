@@ -2,7 +2,7 @@
 
 A web-based customer service management application developed for the UAB Research Computing HPC environment (Cheaha).
 
- ![screenshot of the Cheaha dashboard](/image/user-info.png)
+ ![screenshot of the Cheaha dashboard](/static/image/user-info.png)
 
 This App includes the following role-based  (for RC team, PI and members) features:
 
