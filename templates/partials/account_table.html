@@ -1,8 +1,52 @@
-<p><strong>Status:</strong> {{ current.state }}</p>
-<!-- <p><strong>Last Updated:</strong> {{ current.timestamp }}</p> -->
+<!-- Current Status -->
+<p>
+    <strong>Current status:</strong>
+    <span id="currentState">{{ current.state }}</span>
 
-<button class="btn btn-outline-primary" onclick="toggleHistory()">View History</button>
+    <!-- Success Message box -->
+    <div id="updateMessage"
+         style="color: green; font-weight: bold; margin-top: 10px; display:none;">
+    </div>
+</p>
 
+<!-- View History Button -->
+<button type="button"
+        class="btn btn-outline-primary btn-sm"
+        onclick="toggleHistory()">
+    View History
+</button>
+
+<!-- Update State Button -->
+{% if session.role == "rc-team" %}
+<button class="btn btn-warning btn-sm" id="showUpdateStateForm">
+    Update State
+</button>
+{% endif %}
+<!-- Hidden Update State Form -->
+<form method="post" id="updateStateForm" class="row g-3 mb-4" style="display: none;">
+    <div class="col-md-4">
+        <select name="state" id="stateSelect" class="form-select" required>
+            <option value="">-- Select new state --</option>
+            <option value="ok">Ok</option>
+            <option value="hold">Hold</option>
+            <option value="certification">Certification</option>
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <input type="hidden" name="action" value="update_state">
+        <button class="btn btn-primary" id="submitStateUpdate">Update</button>
+    </div>
+
+    <div class="col-auto">
+        <button type="button" class="btn btn-outline-secondary" id="cancelUpdateState">
+            Cancel
+        </button>
+    </div>
+</form>
+
+
+<!-- History Table -->
 <div id="history" style="display:none;" class="mt-3">
     <table class="table table-bordered">
         <tr>
@@ -10,7 +54,7 @@
             <th>Account</th>
             <th>State</th>
             <th>Timestamp</th>
-            <th>update by</th>
+            <th>Update By</th>
             <th>Node</th>
         </tr>
 
@@ -20,7 +64,7 @@
             <td>{{ row.account }}</td>
             <td>{{ row.state }}</td>
             <td>{{ row.timestamp }}</td>
-            <td>{{ row.updated}}</td>
+            <td>{{ row.updated }}</td>
             <td>{{ row.node }}</td>
         </tr>
         {% endfor %}
@@ -28,8 +72,64 @@
 </div>
 
 <script>
+    
+// Toggle history table 
 function toggleHistory() {
     const box = document.getElementById("history");
     box.style.display = box.style.display === "none" ? "block" : "none";
 }
+
+// Show the update-state form
+document.getElementById("showUpdateStateForm").onclick = function () {
+    document.getElementById("updateStateForm").style.display = "flex";
+};
+
+// Hide the update-state form
+document.getElementById("cancelUpdateState").onclick = function () {
+    document.getElementById("updateStateForm").style.display = "none";
+};
+
+// Handle update button click
+document.getElementById("submitStateUpdate").onclick = function (event) {
+    event.preventDefault();
+
+    const newState = document.getElementById("stateSelect").value;
+    if (!newState) return;
+
+    fetch("/update_state/{{ current.account }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: newState })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+
+            // Update visible current status
+            document.getElementById("currentState").innerText =
+                newState.toUpperCase();
+
+            // Show success message
+            const msg = document.getElementById("updateMessage");
+            msg.innerText = "Account state updated to: " + newState.toUpperCase();
+            msg.style.display = "block";
+
+            // Hide form after update
+            document.getElementById("updateStateForm").style.display = "none";
+
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(err => {
+        alert("Failed to update account state");
+        console.error(err);
+    });
+};
+
+
+// Clear message on page reload 
+window.addEventListener("load", () => {
+    document.getElementById("updateMessage").style.display = "none";
+});
 </script>

@@ -1,117 +1,187 @@
-from flask import Flask, render_template, Response, request, redirect
-
-# Importing functions that generate the diffrent information
-from services.account import fetch_account_status
-from services.membership import fetch_membership
-from services.jobs import fetch_jobs, summarize_jobs_by_partition
-from services.storage import fetch_storage
-
+from flask import Flask, render_template, Response, request, session, jsonify, redirect, url_for
 import json
+import os
+# Importing functions that generate the diffrent information
+from services.user_info.account import fetch_account_status, update_account_state
+from services.user_info.membership import fetch_membership
+from services.user_info.jobs import fetch_jobs, summarize_jobs_by_partition
+from services.user_info.storage import fetch_storage
+#from services.partitions import fetch_partitions
+from services.projects import (list_projects, get_project, add_member,remove_member)
 
-from services.projects import (
-    list_projects,
-    get_project,
-    add_member,
-    remove_member
-)
-
-# Partition-related infromation (demo)
-from services.partitions import fetch_partitions
-
+# initializes the web application
 app = Flask(__name__)
+app.secret_key = "flask need this secretkey before we use a session"
 
-# A function that generates multiple system reports for a user taking their BlazerID ans an input, and the system returns: 
+# before every route, check the loged in  user and assigne a role
+@app.before_request
+def auto_auth():
+    
+    with open("role.json") as f:
+        roles = json.load(f)
+    
+     # any time the browser refreshed we should fetch the username and update session user_id
+    cheaha_user = os.getenv("USER")
+    session["user_id"] = cheaha_user
+
+    # Update role from role.json 
+    if cheaha_user in roles.get("rc-team", []):
+        session["role"] = "rc-team"
+    else:
+        session["role"] = "normal_user"
+
+# A function taking a BlazerID as an input, and  returns: 
 # Account state history, current account state, project memberships, storage usage, job summary by partition 
 @app.route("/", methods=["GET", "POST"])
 def dashboard():
-    # Initialize all variables
-    user_id = None
-    current = None #  # Latest account state entry
-    history = []  # Full account state history
-    membership = None
-    jobs = None
-    storage = None
-    partition_summary = None # Job summary grouped by partition for a user
-    
-    # Default number of jobs to show unless user changes it
-    job_limit = 2
-    
-    # Read GET parameters (date filter) 
-    start_date = request.args.get("start") 
-    end_date = request.args.get("end")
-    
-    if request.method == "POST":
-        user_id = request.form.get("user_id").strip()
+    logged_in_user = session["user_id"]
+    role = session.get("role", "normal_user")
 
-        # first determine if the user exist by checking acount state history
-        history = fetch_account_status(user_id)
-        
-         # If user is not exists (do not have cheaha account), fetch_account_status() returns an empty list/ or history is empty.
-         #just return the dashborad with erro log
-        if not history: 
-            return render_template(
-                "dashboard.html",
-                user_id=user_id,
-                user_not_found=True, # Template uses this to hide all sections
-                current=None,
-                history=[],
-                membership=None,
-                storage=None,
-                jobs=None,
-                partition_summary={},
-                job_limit=None
-            )
+    # for facilitation when they submit a search form (POST)
+    if role == "rc-team" and request.method == "POST":
+            user_id = request.form.get("user_id", "").strip()
+            job_limit = int(request.form.get("job_limit", 2))
 
-        # If user exists, the firts entry on the history list is current state.
-        current = history[0]
-        
-        # job limit, user selected a different job limit
-        if request.form.get("job_limit"):
-            job_limit = int(request.form.get("job_limit"))
-            
-        # call all funtion and  generate all remaining reports
-        membership = fetch_membership(user_id)
-        #Pass date filters to fetch_jobs
-        jobs = fetch_jobs(user_id, limit=job_limit,start=start_date, end=end_date)
-        partition_summary = summarize_jobs_by_partition(jobs)
-        storage = fetch_storage(user_id)
+            # Redirect POST to GET to avoid form resubmission on refresh
+            return redirect(url_for("dashboard", user_id=user_id, job_limit=job_limit))
     
-    
-     #  GET and user_id already exists in session or page 
-    elif request.method == "GET" and request.args.get("user_id"):
-        user_id = request.args.get("user_id") 
-        history = fetch_account_status(user_id) 
-        current = history[0] if history else None 
-        membership = fetch_membership(user_id) 
-        storage = fetch_storage(user_id)
-          
-        # Fetch jobs with date filter 
-        jobs = fetch_jobs(user_id, limit=job_limit, start=start_date, end=end_date) 
-        partition_summary = summarize_jobs_by_partition(jobs)
-         
-         
-    # generate the dashboard with all collected data
+    # if GET request (normal page load)
+    if role == "rc-team":
+        user_id = request.args.get("user_id")
+        job_limit = int(request.args.get("job_limit", 2))
+
+
+    # if other users/researchers
+    else:
+        user_id = logged_in_user
+        job_limit = 2
+
+    # If no user_id (rc-team hasn't searched yet)
+    if not user_id:
+        return render_template("dashboard.html")
+
+    # Fetch account history to check if user exists
+    history = fetch_account_status(user_id)
+
+    # User not found (if a user dont have a cheaha account)
+    if not history:
+        return render_template(
+            "dashboard.html",
+            user_id=user_id,
+            user_not_found=True,
+            history=[],
+            current=None,
+            membership=None,
+            jobs=None,
+            partition_summary={},
+            job_limit=None,
+            storage=None
+        )
+
+    # User exists (have a cheaha account) then load all data
+    current = history[0]
+    membership = fetch_membership(user_id)
+    jobs = fetch_jobs(user_id, limit=job_limit)
+    partition_summary = summarize_jobs_by_partition(jobs)
+    storage = fetch_storage(user_id)
+     
+    # Render final dashboard then
     return render_template(
         "dashboard.html",
         user_id=user_id,
         current=current,
         history=history,
         membership=membership,
-        storage=storage,
         jobs=jobs,
         partition_summary=partition_summary,
         job_limit=job_limit,
-        start_date = start_date,
-        end_date = end_date
+        storage=storage
     )
 
+@app.route("/update_state/<user_id>", methods=["POST"])
+def update_state_route(user_id):
+   
+    #AJAX endpoint called by fetch() from the frontend.
+    #Updates the account state without reloading the page.
 
-# Flask decorator that maps the /projects URL to this function
+    data = request.get_json()
+    new_state = data.get("state")
+
+    # Run backend update (same as bash acct())
+    update_account_state(user_id, new_state)
+
+    # Fetch updated DB row
+    updated_record = fetch_account_status(user_id)
+
+    return jsonify({
+        "success": True,
+        "state": new_state,
+        "record": updated_record
+    })
+
+
+# When you visit a /projects url in the browser (e.g http://localhost:5000/projects), excute the function projects
 @app.route("/projects")
 def projects():
-    return render_template("projects.html", projects=list_projects())
+    user = session["user_id"]
+    role = session.get("role", "normal_user")
 
-#Download project infromation as json file
+    all_projects = list_projects()
+    filtered = {}
+
+    for dirname, p in all_projects.items():
+
+        # rc-team sees everything
+        if role == "rc-team":
+            filtered[dirname] = p
+            continue
+
+        # normal users, show only PI or membership
+        if p["pi"] == user or user in p["members"]:
+            filtered[dirname] = p
+
+    return render_template(
+        "projects.html",
+        projects=filtered,
+        user=user
+    )
+    #return render_template("projects.html", projects=list_projects())
+    
+# The name is extracted from the projec directory name e.g datascience from /data/project/datascience
+@app.route("/projects/<name>", methods=["GET", "POST"])
+def project_detail(name):
+    user = session["user_id"]
+    role = session.get("role", "normal_user")
+    
+    project = get_project(name)
+    groupname = project["groupname"]
+    message = None
+
+    if request.method == "POST":
+
+        action = request.form.get("action")
+        user = request.form.get("user")
+        
+        # this will get  output with either:
+        # (True, "User <BlazerID> added successfully.") or (False, "User <BlazerID> does not exist.")
+        # from add_member(groupname, user). that is why ok, message variable used here
+        if action == "add":
+            ok, message = add_member(groupname, user)
+        elif action == "remove":
+            ok, message = remove_member(groupname, user)
+            
+        # reload page but keep the message displayed
+        return render_template(
+            "partials/project_members.html",
+            name = name,
+            project = project,
+            message = message,
+            user=user
+            )
+
+    return render_template("partials/project_members.html", name=name, project=project, user=user)
+
+# Download project infromation as json file
 @app.route("/projects.json")
 def download_projects_json():
     projects = list_projects() 
@@ -125,42 +195,12 @@ def download_projects_json():
             "Content-Disposition": "attachment; filename=projects.json"
         }
     )
-    
-# Here the name is extracted from the directory name e.g datascience from /data/project/datascience
-@app.route("/projects/<name>", methods=["GET", "POST"])
-def project_detail(name):
-    project = get_project(name)
-    groupname = project["groupname"]
-    message = None
 
-    if request.method == "POST":
-        action = request.form.get("action")
-        user = request.form.get("user")
-        
-        # this will get a tub with either:
-        # (True, "User alice added successfully.") or (False, "User alice does not exist.")
-       # from add_member(groupname, user). that is wy ok, message variable used here
-        if action == "add":
-            ok, message = add_member(groupname, user)
-        elif action == "remove":
-            ok, message = remove_member(groupname, user)
-            
-        # reload page but keep the message displayed
-        return render_template(
-            "partials/project_members.html",
-            name = name,
-            project = project,
-            message = message
-            )
-
-    return render_template("partials/project_members.html", name=name, project=project)
-
-
-# available partitions and their resource information
+# partion info
 @app.route("/partitions")
 def partitions():
-    data = fetch_partitions()
-    return render_template("partitions.html", partitions=data)
+    # data = fetch_partitions()
+    return render_template("partitions.html")
 
 # Start the flask development server in prot 5000
 # use `app.run(debug=True)` instead of app.run(debug=True, port=5000) if you launch as sandboxapp

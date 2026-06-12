@@ -1,110 +1,98 @@
 {% extends "index.html" %}
 {% block content %}
 
-<h2>Lab Projects ({{ projects|length }} Total projects)</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold">Lab Projects ({{ projects|length }})</h2>
+     <!-- 
+    logic to hide and show the manage and download button/columan if the user is rc-team or if the user is PI 
 
-<!-- Filter box to search projects by name -->
-<div class="d-flex align-items-center mb-3" style="gap: 10px;">
-    <label for="projectFilter" class="fw-bold m-0">Search Projects by Name </label>
+    Jinja does not allow normal variables to be updated inside loops, because each loop iteration has its own local scope.
+    So, we use a Jinja "namespace" object, which allows the show_all variable persists after the loop finishes.
+    -->
 
-    <input type="text"
-           id="projectFilter"
-           class="form-control"
-           style="max-width: 300px;"
-           placeholder=" enter lab name">
+    {% set show = namespace(show_all=false) %}
+    {% for dirname, p in projects.items() %}
+        {% if session.role == "rc-team" or p.pi == user %}
+            {% set show.show_all = true %}
+        {% endif %}
+    {% endfor %}
+
+    {% if show.show_all %}
+    <a href="/projects.json" class="btn btn-outline-secondary">
+        Download JSON
+    </a>
+    {% endif %}
 </div>
 
-<a href="/projects.json" class="btn btn-secondary mb-3">
-    Download as JSON
-</a>
+<!-- Search bar -->
+<div class="d-flex align-items-center mb-3" style="gap: 10px;">
+    <label for="projectFilter" class="fw-bold m-0">Search Projects by Name </label>
+    <input type="text" id="projectFilter" class="form-control" style="max-width: 300px;" placeholder="Search projects">
+</div>
 
-
-<table class="table table-bordered align-middle">
-    <thead>
-        <tr>
-            <th>Directory</th>
-            <th>Group</th>
-            <th>PI/Owner</th>
-            <th>Storage (demo!)</th>   <!-- new col for storage demo -->
-            <th>Members</th>
-            <th>Manage</th>
-        </tr>
-    </thead>
-
-    <tbody id="projectTable">
-    {% for dirname, p in projects.items() %}
-        <tr class="project-row">
-            <td class="project-name">{{ dirname }}</td>
-            <td>{{ p.groupname }}</td>
-            <td>{{ p.pi }}</td>
-            
-            <!-- Storage usage with demo data -->
-            <td style="width: 200px;">
-                {% set demo_usage = (loop.index * 13) % 100 %} 
-
-                <div class="progress" style="height: 20px;">
-                    <div class="progress-bar 
-                        {% if demo_usage < 60 %}bg-success
-                        {% elif demo_usage < 85 %}bg-warning
-                        {% else %}bg-danger{% endif %}"
-                        role="progressbar"
-                        style="width: {{ demo_usage }}%;">
-                        {{ demo_usage }}%
-                    </div>
-                </div>
-            </td>
-
-            <td>
-                <button class="btn btn-sm btn-outline-secondary"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#members-{{ loop.index }}"
-                        onclick="
-                            if (this.classList.contains('open')) {
-                                this.classList.remove('open');
-                                this.textContent = '+ ({{ p.members|length }})';
-                            } else {
-                                this.classList.add('open');
-                                this.textContent = '- ({{ p.members|length }})';
-                            }
-                        ">
-                    + ({{ p.members|length }})
-                </button>
-
-                <div id="members-{{ loop.index }}" class="collapse mt-2">
-                    {% if p.members %}
-                        {{ p.members | join(", ") }}
+<!-- Resource list -->
+<div id="projectList">
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Directory</th>
+                <th>Group</th>
+                {% if show.show_all %}
+                    <th>PI</th>
+                {% else %}
+                    <th>Role</th>
+                {% endif %}
+                <th class="text-center">Details</th>
+            </tr>
+        </thead>
+    
+        <tbody>
+            {% for dirname, p in projects.items() %}
+            <tr class="project-row">
+                <td>
+                    /data/project/{{ dirname }}
+                    <span class="project-key d-none">{{ dirname }}</span>
+                </td>
+    
+                <td>{{ p.groupname }}</td>
+                
+                <td>
+                    {% if show.show_all %}
+                        {{ p.pi }}
                     {% else %}
-                        <em>No members</em>
+                        {% if user == p.pi %}
+                            <span class="badge bg-warning">PI</span>
+                        {% elif user in p.members %}
+                            <span class="badge bg-info">Member</span>
+                        {% endif %}
                     {% endif %}
-                </div>
-            </td>
+                </td>
+                
+                
+                <td class="text-center">
+                    <a href="/projects/{{ dirname }}" class="btn btn-sm btn-primary">
+                        View Details
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
 
-
-            <td>
-                <a href="/projects/{{ dirname }}" class="btn btn-sm btn-outline-primary">
-                    Manage
-                </a>
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+</div>
 
 <!-- Filtering script -->
 <script>
 document.getElementById("projectFilter").addEventListener("input", function () {
     const filter = this.value.toLowerCase();
-    const rows = document.querySelectorAll("#projectTable .project-row");
+    const rows = document.querySelectorAll("#projectList .project-row");
 
     rows.forEach(row => {
-        const name = row.querySelector(".project-name").textContent.toLowerCase();
-        row.style.display = name.startsWith(filter) ? "" : "none";
+        const name = row.querySelector(".project-key").textContent.toLowerCase();
+        row.style.display = name.includes(filter) ? "" : "none";
     });
 });
 </script>
 
-
-
 {% endblock %}
-
-

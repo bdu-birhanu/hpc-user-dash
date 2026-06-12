@@ -1,24 +1,3 @@
-<h3>Jobs for {{ username }}</h3>
-
-<!-- Date filter -->
-<form method="get" class="row g-3 mb-4">
-    <input type="hidden" name="user_id" value="{{ user_id }}">
-
-    <div class="col-auto">
-        <label class="form-label fw-bold">Start Date</label>
-        <input type="date" name="start" value="{{ start_date }}" class="form-control">
-    </div>
-
-    <div class="col-auto">
-        <label class="form-label fw-bold">End Date</label>
-        <input type="date" name="end" value="{{ end_date }}" class="form-control">
-    </div>
-
-    <div class="col-auto d-flex align-items-end">
-        <button class="btn btn-primary">Filter</button>
-    </div>
-</form>
-
 <table class="table table-bordered align-middle">
     <thead>
         <tr>

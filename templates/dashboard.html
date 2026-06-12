@@ -3,15 +3,16 @@
 
 <h2>User Information</h2>
 
+{% if session.role == "rc-team" %}
 <form method="post" class="row g-3 mb-4">
     <div class="col-auto">
-        <input type="text" name="user_id" class="form-control" placeholder="Enter ID" required>
+        <input type="text" name="user_id" class="form-control" placeholder="Enter BlazerID or XAIS" required>
     </div>
     <div class="col-auto">
         <button class="btn" style="background:#0f766e; color:white;">Check</button>
     </div>
 </form>
-
+{% endif %}
 {% if user_not_found %}
     <p class="text-danger fw-bold">User {{ user_id }} not found.</p>
 
@@ -46,7 +47,7 @@
         <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
             <span>Recent Jobs ({{ job_limit }})</span>
     
-            <!-- Job limit dropdown INSIDE the card -->
+            <!-- Job limit dropdown inside the page -->
             <form method="post" class="m-0 p-0">
                 <input type="hidden" name="user_id" value="{{ user_id }}">
     
@@ -62,19 +63,11 @@
                 </select>
             </form>
         </div>
-    
         <div class="card-body">
             {% include "partials/jobs_table.html" %}
         </div>
-    
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">Job Summary by Partition</div>
-        <div class="card-body">
-            {% include "partials/partition_summary.html" %}
-        </div>
-    </div>
     {% endif %}
     
     {% if storage %}
