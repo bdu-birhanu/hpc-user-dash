@@ -1,6 +1,6 @@
 # HPC Customer Service Management Dashboard
 
-A web-based customer service management application developed for the UAB Research Computing HPC environment (Cheaha).
+A web-based customer service management application developed based on the UAB Research Computing HPC environment (Cheaha).
 
  ![screenshot of the Cheaha dashboard](/static/image/user-info.png)
 
