@@ -7,7 +7,7 @@ A web-based customer service management application developed based on the UAB R
 This App includes the following role-based  (for RC team, PI and members) features:
 
 - **User Account Information**:
-  - View user account status, group memberships, job submission information per user, and quota usage.
+  - View and chnage user account status, group memberships, job submission information per user, and quota usage.
 - **Project Allocations**:
   - View project directory names and group names, and project quota usage.
   - Manage membership (list, add, remove users).
